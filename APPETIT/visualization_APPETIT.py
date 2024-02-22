@@ -49,7 +49,7 @@ df_low_risk.to_excel("created_df/df_low_risk.xlsx")
 assert df_high_risk.shape == (len(df_data[df_data["cluster"]=="High risk"]), len(df_data.columns))
 
 variable_names_included_in_clustering = [
-       'Sex','Age', 'BMI', 'Psychological_motives',
+       'Age', 'BMI', 'Psychological_motives',
        'Interpersonal_motives', 'Health_motives', 'Body_related_motives',
        'Fitness_motives', 'BES_subscale_appearance',
        'BES_subscale_attribution', 'BES_subscale_weight', 'CDRS', 'Rosenberg',
