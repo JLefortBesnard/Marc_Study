@@ -42,10 +42,10 @@ variable_names_included_in_clustering = [
        'MAIA_Body_listening_subscale', 'MAIA_Trusting_subscale',
        'F-MPS Concern over mistakes and doubts about actions', 'F-MPS Excessive concern with parents expectations and evaluation',
        'F-MPS Excessively high personal standards',
-       'F-MPS Concern with precision, order and organisation', 'sport_time','Intensité de pratique']
+       'F-MPS Concern with precision, order and organisation', 'sport_time']
 array_scores_for_clustering = df_data[variable_names_included_in_clustering].values
 array_standardized_scores_for_clustering = StandardScaler().fit_transform(array_scores_for_clustering)
-assert array_standardized_scores_for_clustering.shape == (1053, 35) #1053 subjects, 35 variables
+assert array_standardized_scores_for_clustering.shape == (1053, 34) #1053 subjects, 35 variables
 
 # save the standardized data into a copy of the original df
 df_data_standardized = df_data.copy()
@@ -69,12 +69,12 @@ NbClust(data, min.nc = 2, max.nc = 8, method = 'kmeans')
 R output
 ******************************************************************* 
 * Among all indices:                                                
-* 9 proposed 2 as the best number of clusters 
-* 9 proposed 3 as the best number of clusters 
-* 1 proposed 4 as the best number of clusters 
+* 11 proposed 2 as the best number of clusters 
+* 8 proposed 3 as the best number of clusters 
+* 2 proposed 4 as the best number of clusters 
 * 1 proposed 5 as the best number of clusters 
-* 1 proposed 7 as the best number of clusters 
-* 2 proposed 8 as the best number of clusters 
+* 1 proposed 6 as the best number of clusters 
+* 1 proposed 8 as the best number of clusters 
 
                    ***** Conclusion *****                            
  
