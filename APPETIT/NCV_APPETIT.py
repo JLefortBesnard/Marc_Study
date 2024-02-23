@@ -53,7 +53,7 @@ variable_names_included_in_clustering = [
 
 
 X_std = df_data_standardized[variable_names_included_in_clustering].values
-# assert X_std.shape==(528, 35)
+assert X_std.shape==(528, 35)
 y = df_data_standardized['EAT_26_total_score'].values
 # assert y.shape == (528,)
 
