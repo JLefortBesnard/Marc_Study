@@ -1,4 +1,4 @@
-"""Clustering procedure
+"""Nested Cross validation procedure
 2024 by
 Marc Toutain, marc (at) toutain (at) unicaen (dot) fr
 Jeremy lefort-Besnard, jlefortbesnard (at) tuta (dot) io
@@ -31,7 +31,10 @@ import pandas as pd
 #Reproducibility
 np.random.seed(0)
 
-# load data
+#######################################
+#Prepare data for benchmarking
+#######################################
+
 df_data_standardized = pd.read_excel("created_df/df_high_risk_std.xlsx")
 
 variable_names_included_in_clustering = [
@@ -53,7 +56,7 @@ variable_names_included_in_clustering = [
 
 
 X_std = df_data_standardized[variable_names_included_in_clustering].values
-assert X_std.shape==(528, 35)
+assert X_std.shape==(525, 35)
 y = df_data_standardized['EAT_26_total_score'].values
 # assert y.shape == (528,)
 
@@ -62,29 +65,33 @@ y = df_data_standardized['EAT_26_total_score'].values
 y = np.where(y >= 20, y, 0)
 y = np.where(y < 20, y, 1)
 
-print("N y==0 : ",y[np.where(y==0)].__len__()) # 518
-print("N y==1 : ",y[np.where(y==1)].__len__()) #10
+print("N y==0 : ",y[np.where(y==0)].__len__()) # 379
+print("N y==1 : ",y[np.where(y==1)].__len__()) # 146
 
 #Downsampling - y == 0 and y == 1 samples size are imbalanced, a downsampling is needed 
 selected_index_y0 = np.random.choice(np.where(y == 0)[0], y[np.where(y==1)].__len__(), replace = False)
-print("index_Y == 0: ", selected_index_y0)
 included_subject_index = np.sort(np.concatenate((selected_index_y0, np.where(y == 1)[0])))
 print(included_subject_index)
-
 y = y[included_subject_index]
-#assert y.shape == (220,)
+assert y.shape == (292,)
+
 X_std = X_std[included_subject_index]
-#assert X_std.shape == (220,36)
+assert X_std.shape == (292,35)
+
+
+#######################################
+# Nested CV with parameter optimization
+#######################################
 
 #Define the algorithm to test in the NCV
 estimators_classif = [
     #linear estimators
     ['Ridge', {'alpha': np.logspace(-5, +5, 11)}, RidgeClassifier(random_state=0)],
     ['Logistic Regression',{'C': np.logspace(-5, +5, 11)},LogisticRegression(random_state=0)],
-    #['SVM', {'C': np.logspace(-5, +5, 11)},SVC(random_state=0)],
+    ['SVM', {'C': np.logspace(-5, +5, 11)}, SVC(kernel="linear", random_state=0)],
     #non-linear estimators
     ['Decision Tree', {'max_depth': [3,5,10,None]}, DecisionTreeClassifier(random_state=0)],
-    #['RandomForest', {'n_estimators':[50,100,200], 'max_depth': [3,5,10,None]}, RandomForestClassifier(random_state=0)],
+    ['RandomForest', {'n_estimators':[50,100,200], 'max_depth': [3,5,10,None]}, RandomForestClassifier(random_state=0)],
     ['k-Nearest Neigbors', {'n_neighbors': np.arange(2,10)}, KNeighborsClassifier()],
 ]
 
@@ -107,6 +114,8 @@ for est in estimators_classif:
     clf.fit(X_std, y)
     print(est)
     print("Best estimator: ", clf.best_estimator_)
+    if 'SVM' in est:
+        print("Best shrinkage value: ", clf.best_estimator_.C) # usefull for SVC_APPETIT analysis
     print("Best score: ", clf.best_score_)
     print("***")
     print(clf.cv_results_)
@@ -118,32 +127,37 @@ for est in estimators_classif:
     if np.mean(score_VP[est[0]]) > best_score:
         best_score = np.mean(score_VP[est[0]])
         selected_model = clf.best_estimator_
-        
+df_dataVP = pd.DataFrame.from_dict(score_VP)
+
+#######################################
+# Save and plot results
+#######################################
+     
 import seaborn as sns
 import numpy as np
 import matplotlib.pyplot as plt
 
-df_dataVP = pd.DataFrame.from_dict(score_VP)
-print(df_dataVP)
+
 sns.set_style('whitegrid')
 fig, ax = plt.subplots(figsize=(15, 9))
 _ = plt.xticks(rotation=45, ha='right')
-my_palette = ['lightblue']*2+['orange']*2
+my_palette = ['lightblue']*3+['orange']*3
 sns.violinplot(data = df_dataVP, palette = my_palette)
-plt.vlines(1.5, ymin = 0.5, ymax = 1, color = 'black', linestyles = 'dotted')
+plt.vlines(2.5, ymin = 0.5, ymax = 1, color = 'black', linestyles = 'dotted')
 plt.xticks(fontsize = 16)
 plt.yticks(fontsize = 16)
-plt.ylabel('Précision', fontsize = 20)
-plt.xlabel('Algorithme', fontsize = 20)
+plt.ylabel('Precision', fontsize = 20)
+plt.xlabel('Algorithms', fontsize = 20)
 plt.ylim(0.5,1)
 plt.tight_layout()
-
-plt.savefig('..\\Results\\visualisation\\Benchmark_models.png',dpi=300)
+plt.savefig('results/visualisation/Benchmark_models.png',dpi=300)
+plt.show()
 
 #Final model result
 nested_scores = cross_val_score(selected_model, X=X_std, y=y, cv=outer_cv)
 nested_scores = nested_scores.mean()
 
+print(df_dataVP)
 print("Selected model: ",selected_model)
 print("Average score outer CV: ",nested_scores)
 
