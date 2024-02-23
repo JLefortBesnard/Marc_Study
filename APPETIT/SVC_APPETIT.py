@@ -257,8 +257,8 @@ print("resp:",weights_per_variable.__len__())
 pvals = []
 for ind_var in range(35):
     variable_weights = weights_per_variable[ind_var] 
-    above = stats.scoreatpercentile(variable_weights, 95)
-    below = stats.scoreatpercentile(variable_weights, 5)
+    above = stats.scoreatpercentile(variable_weights, 97.5)
+    below = stats.scoreatpercentile(variable_weights, 2.5)
 
     if df_coefs.values[0][ind_var] < below or df_coefs.values[0][ind_var] > above:
         pvals.append(1)
