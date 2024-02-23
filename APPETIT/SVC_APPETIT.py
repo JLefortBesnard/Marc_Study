@@ -1,4 +1,4 @@
-"""SVC procedure (SVC is the best model selected by nested CV procedure)
+"""LogisticRegression procedure (LogisticRegression(C=0.01, random_state=0) is the best model selected by nested CV procedure)
 2024 by
 Marc Toutain, marc (at) toutain (at) unicaen (dot) fr
 Jeremy lefort-Besnard, jlefortbesnard (at) tuta (dot) io
@@ -13,7 +13,6 @@ This code:
     Does a non-parametric hypothesis test of 100 permutation and print significant variables (p < .05)
 """
 
-from sklearn.svm import SVC
 from sklearn.linear_model import LogisticRegression
 import numpy as np
 import pandas as pd
@@ -43,7 +42,6 @@ def rotateTickLabels(ax, rotation, which, rotation_mode='anchor', ha='left'):
 #######################################
 
 df_data_standardized = pd.read_excel("created_df/df_high_risk_std.xlsx")
-# From the NCV the best is a SVC(random_state=0) Average score outer CV:  0.7945205479452054
 
 variable_names_included_in_clustering = [
        'Sex','Age','BMI', 'Psychological_motives',
@@ -64,7 +62,7 @@ variable_names_included_in_clustering = [
 
 
 X_std = df_data_standardized[variable_names_included_in_clustering].values
-assert X_std.shape==(525, 35)
+assert X_std.shape==(392, 35)
 y = df_data_standardized['EAT_26_total_score'].values
 # assert y.shape == (528,)
 
@@ -81,10 +79,15 @@ selected_index_y0 = np.random.choice(np.where(y == 0)[0], y[np.where(y==1)].__le
 included_subject_index = np.sort(np.concatenate((selected_index_y0, np.where(y == 1)[0])))
 print(included_subject_index)
 y = y[included_subject_index]
-assert y.shape == (292,)
+assert y.shape == (234,)
 
 X_std = X_std[included_subject_index]
-assert X_std.shape == (292,35)
+assert X_std.shape == (234,35)
+
+#######################################
+#  modeling using the best selected model: linear regression
+#######################################
+
 
 
 #Store data for confusion matrix
@@ -98,7 +101,7 @@ outer_cv.get_n_splits()
 for train_index, test_index in outer_cv.split(X_std):
     X_train, X_test = X_std[train_index],X_std[test_index]
     Y_train, Y_test = y[train_index],y[test_index]
-    clf = SVC(C=1.0, random_state=0)
+    clf = LogisticRegression(C=0.01, random_state=0)
     clf.fit(X_train, Y_train)
     coefs.append(np.squeeze(clf.coef_))
     y_true.append(Y_test.tolist())
@@ -116,36 +119,35 @@ y_true=np.array(temp_true)
 y_pred=np.array(temp_pred)
 
 print(y_true.shape)
-df_coefs = pd.DataFrame(data=[np.mean(coefs, axis=0)], columns=df[variable_names_included_in_clustering].columns)
+df_coefs = pd.DataFrame(data=[np.mean(coefs, axis=0)], columns=df_data_standardized[variable_names_included_in_clustering].columns)
 df_coefs = df_coefs.sort_values(by=[0], axis=1, ascending = False)
 df_coefs = df_coefs.round(2)
 
-df_coefs.to_excel("..\\Created_df\\df_coefs_LogisticRegression.xlsx")
+df_coefs.to_excel("created_df/df_coefs_LogisticRegression.xlsx")
 
 plt.close('all')
 
+#######################################
+# Plot results
+#######################################
+
 ###HEATMAP
-fig, ax = plt.subplots(figsize = (30,2))
-g = sns.heatmap(df_coefs, annot = True, annot_kws={'size': 16}, square = True, cmap='coolwarm', cbar = False, yticklabels=False, center=0)
-
-
+fig, ax = plt.subplots(figsize = (25,12))
+g = sns.heatmap(df_coefs, annot = True, annot_kws={'size': 12}, square = True, cmap='coolwarm', cbar = False, yticklabels=False, center=0)
 ax.xaxis.tick_top()
 rotateTickLabels(ax, 90, 'x')
-plt.xticks(fontsize = 22)
-
-#plt.tight_layout()
-plt.savefig('..\\Results\\visualisation\\LogReg_heat_map.png', dpi=300, bbox_inches='tight')
+plt.xticks(fontsize = 12)
+plt.tight_layout()
+plt.savefig('results/visualisation/LogReg_heat_map.png', dpi=300, bbox_inches='tight')
 plt.show()
 
 
 ###CATPLOT
 #define a catplot with variable on axis X and value on axis Y for each different value in column "cluster" (hue="cluster") 
-g = sns.catplot(height=10, aspect=2, color='blue', kind="bar", data=df_coefs)
-
-
+g = sns.catplot(height=5, aspect=2, color='blue', kind="bar", data=df_coefs)
 #Rotate the x ticks for 45 degrees
-_ = plt.xticks(rotation=70, ha='right', fontsize = 20)
-_ = plt.yticks(rotation=90, fontsize = 15)
+_ = plt.xticks(rotation=70, ha='right', fontsize = 12)
+_ = plt.yticks(rotation=90, fontsize = 12)
 _ = plt.axhline(y=0.2,color='red', linestyle='--')
 _ = plt.axhline(y=-0.2,color='red', linestyle='--')
 _ = plt.axhline(y=0.3,color='red')
@@ -153,8 +155,8 @@ _ = plt.axhline(y=-0.3,color='red')
 
 #Increase label size and rotate labels => done
 #Add coefs on the left side in powerpoint + save each figure + figure caption in powerpoint => done
-
-g.savefig('..\\Results\\visualisation\\LogReg_catplot_coefs.png', dpi=300)
+# plt.tight_layout()
+g.savefig('results/visualisation/LogReg_catplot_coefs.png', dpi=300)
 
 plt.show()
 
@@ -210,7 +212,7 @@ plt.xlabel('Prediction', fontsize=20)
 plt.ylabel("Real values", fontsize=20)
 plt.ylim([1.5, -.5])
 plt.tight_layout()
-plt.savefig('..\\Results\\visualisation\\LogReg_confusion_matrix.png', dpi=300)
+plt.savefig('results/visualisation/LogReg_confusion_matrix.png', dpi=300)
 plt.show()
 
 

@@ -56,7 +56,7 @@ variable_names_included_in_clustering = [
 
 
 X_std = df_data_standardized[variable_names_included_in_clustering].values
-assert X_std.shape==(525, 35)
+assert X_std.shape==(392, 35)
 y = df_data_standardized['EAT_26_total_score'].values
 # assert y.shape == (528,)
 
@@ -73,10 +73,10 @@ selected_index_y0 = np.random.choice(np.where(y == 0)[0], y[np.where(y==1)].__le
 included_subject_index = np.sort(np.concatenate((selected_index_y0, np.where(y == 1)[0])))
 print(included_subject_index)
 y = y[included_subject_index]
-assert y.shape == (292,)
+assert y.shape == (234,)
 
 X_std = X_std[included_subject_index]
-assert X_std.shape == (292,35)
+assert X_std.shape == (234,35)
 
 
 #######################################
@@ -109,12 +109,12 @@ best_score = 0
 selected_model = None
 score_VP = {}
 
-for est in estimators_classif:
+for ind, est in enumerate(estimators_classif):
     clf = GridSearchCV(estimator=est[2], param_grid=est[1], cv=inner_cv)
     clf.fit(X_std, y)
     print(est)
     print("Best estimator: ", clf.best_estimator_)
-    if 'SVM' in est:
+    if 'Logistic Regression' in est:
         print("Best shrinkage value: ", clf.best_estimator_.C) # usefull for SVC_APPETIT analysis
     print("Best score: ", clf.best_score_)
     print("***")
@@ -125,8 +125,9 @@ for est in estimators_classif:
     score_VP[est[0]]=cross_val_score(clf.best_estimator_, X=X_std, y=y, cv=outer_cv)
     
     if np.mean(score_VP[est[0]]) > best_score:
-        best_score = np.mean(score_VP[est[0]])
-        selected_model = clf.best_estimator_
+        if ind <=2 : # only linear model are included
+            best_score = np.mean(score_VP[est[0]])
+            selected_model = clf.best_estimator_
 df_dataVP = pd.DataFrame.from_dict(score_VP)
 
 #######################################

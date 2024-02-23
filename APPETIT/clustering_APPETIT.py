@@ -107,7 +107,7 @@ R output
 """
 
 # nb cluster = 2 according to R output cluster 
-output_clustering = KMeans(n_clusters=2, random_state=0).fit(df_data[variable_names_included_in_clustering].values)
+output_clustering = KMeans(n_clusters=2, random_state=0).fit(df_data_standardized[variable_names_included_in_clustering].values)
 
 df_data["cluster"] = output_clustering.labels_
 df_data_standardized["cluster"] = output_clustering.labels_
@@ -128,25 +128,25 @@ if not os.path.exists("results/visualisation"):
     os.mkdir("results/visualisation")
 
 # set cluster names to a human readable form
-df_data["cluster"][df_data["cluster"] == 0] = "Low risk"
-df_data["cluster"][df_data["cluster"] == 1] = "High risk"
+df_data["cluster"][df_data["cluster"] == 0] = "High risk"
+df_data["cluster"][df_data["cluster"] == 1] = "Low risk"
 assert(np.unique(df_data["cluster"].values).__len__() == 2) 
-df_data_standardized["cluster"][df_data_standardized["cluster"] == 0] = "Low risk"
-df_data_standardized["cluster"][df_data_standardized["cluster"] == 1] = "High risk"
+df_data_standardized["cluster"][df_data_standardized["cluster"] == 0] = "High risk"
+df_data_standardized["cluster"][df_data_standardized["cluster"] == 1] = "Low risk"
 
 # save a dataframe per cluster standardized data
-df_high_risk_std = df_data_standardized[df_data_standardized["cluster"] == "Low risk"]
-df_high_risk_std.to_excel("created_df/df_low_risk_std.xlsx")
-df_low_risk_std = df_data_standardized[df_data_standardized["cluster"] == "High risk"]
-df_low_risk_std.to_excel("created_df/df_high_risk_std.xlsx")
-assert df_high_risk_std.shape == (len(df_data_standardized[df_data_standardized["cluster"]=="Low risk"]), len(df_data_standardized.columns))
+df_high_risk_std = df_data_standardized[df_data_standardized["cluster"] == "High risk"]
+df_high_risk_std.to_excel("created_df/df_high_risk_std.xlsx")
+df_low_risk_std = df_data_standardized[df_data_standardized["cluster"] == "Low risk"]
+df_low_risk_std.to_excel("created_df/df_low_risk_std.xlsx")
+assert df_high_risk_std.shape == (len(df_data_standardized[df_data_standardized["cluster"]=="High risk"]), len(df_data_standardized.columns))
 
 # save a dataframe per cluster original data
-df_high_risk = df_data[df_data["cluster"] == "Low risk"]
-df_high_risk.to_excel("created_df/df_low_risk.xlsx")
-df_low_risk = df_data[df_data["cluster"] == "High risk"]
-df_low_risk.to_excel("created_df/df_high_risk.xlsx")
-assert df_high_risk.shape == (len(df_data[df_data["cluster"]=="Low risk"]), len(df_data.columns))
+df_high_risk = df_data[df_data["cluster"] == "High risk"]
+df_high_risk.to_excel("created_df/df_high_risk.xlsx")
+df_low_risk = df_data[df_data["cluster"] == "Low risk"]
+df_low_risk.to_excel("created_df/df_low_risk.xlsx")
+assert df_high_risk.shape == (len(df_data[df_data["cluster"]=="High risk"]), len(df_data.columns))
 
 variable_names_included_in_plotting = [
        'Age', 'BMI', 'Psychological_motives',
