@@ -225,14 +225,14 @@ from scipy import stats
 # run the CV 5 fold logistic regression with permutated Y
 
 n_permutations = 100
-perm_rs = np.random.RandomState(0)
 permutation_accs = []
 permutation_coefs = []
 for i_iter in range(n_permutations):
+    perm_rs = np.random.RandomState(i_iter)
     Y_perm = perm_rs.permutation(y)
     clf = LogisticRegression(C=0.01, random_state=0)
-    sss = StratifiedShuffleSplit(n_splits=5, test_size=0.1, random_state=i_iter)
-    sss.get_n_splits(X_std, Y_perm)
+    sss = StratifiedShuffleSplit(n_splits=5, test_size=0.1)
+    sss.get_n_splits(X_std)
     for train_index, test_index in sss.split(X_std, Y_perm):
         X_train, X_test = X_std[train_index], X_std[test_index]
         y_train, y_test = Y_perm[train_index], Y_perm[test_index]
