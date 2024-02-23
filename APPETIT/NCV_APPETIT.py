@@ -88,7 +88,7 @@ estimators_classif = [
     #linear estimators
     ['Ridge', {'alpha': np.logspace(-5, +5, 11)}, RidgeClassifier(random_state=0)],
     ['Logistic Regression',{'C': np.logspace(-5, +5, 11)},LogisticRegression(random_state=0)],
-    ['SVM', {'C': np.logspace(-5, +5, 11)}, SVC(kernel="linear", random_state=0)],
+    ['SVM', {'C': np.logspace(-1, +1, 11)}, SVC(kernel="linear", random_state=0)],
     #non-linear estimators
     ['Decision Tree', {'max_depth': [3,5,10,None]}, DecisionTreeClassifier(random_state=0)],
     ['RandomForest', {'n_estimators':[50,100,200], 'max_depth': [3,5,10,None]}, RandomForestClassifier(random_state=0)],
