@@ -231,7 +231,7 @@ for i_iter in range(n_permutations):
     perm_rs = np.random.RandomState(i_iter)
     Y_perm = perm_rs.permutation(y)
     clf = LogisticRegression(C=0.01, random_state=0)
-    sss = StratifiedShuffleSplit(n_splits=5, test_size=0.1)
+    sss = StratifiedShuffleSplit(n_splits=4, test_size=0.1)
     sss.get_n_splits(X_std)
     for train_index, test_index in sss.split(X_std, Y_perm):
         X_train, X_test = X_std[train_index], X_std[test_index]
@@ -244,7 +244,7 @@ for i_iter in range(n_permutations):
 
 # extract permutation weigth per variable for hypothesis testing
 weights_per_variable = []
-for n_perm in range(500):
+for n_perm in range(400):
     weight_variable = []
     for ind_var in range(35):
         weight_variable.append(permutation_coefs[n_perm][ind_var])
