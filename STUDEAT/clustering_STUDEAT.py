@@ -29,7 +29,7 @@ if not os.path.exists("created_df"):
 # Standardize data 
 ####################
 variable_names_included_to_standardized = [
-       'BMI', 'Psychological_motives',
+       'Age', 'BMI', 'Psychological_motives',
        'Interpersonal_motives', 'Health_motives', 'Body_related_motives',
        'Fitness_motives', 'PSQI', 'CDRS', 'Global Self-Esteem',
        'Perceived physical value', 'Physical condition', 'Sport competence',
@@ -50,7 +50,7 @@ variable_names_included_to_standardized = [
 
 data_to_std = df_data[variable_names_included_to_standardized].values
 std_data = StandardScaler().fit_transform(data_to_std)
-assert std_data.shape == (1926, 37) 
+assert std_data.shape == (1926, 38) 
 
 # save the standardized data into a copy of the original df
 df_data_standardized = df_data.copy()
@@ -61,7 +61,7 @@ df_data_standardized[variable_names_included_to_standardized] = std_data
 # Clustering analysis 
 ####################
 variable_names_included_in_clustering = [
-       'BMI', 'Age', 'Psychological_motives',
+       'Sex', 'BMI', 'Age', 'Psychological_motives',
        'Interpersonal_motives', 'Health_motives', 'Body_related_motives',
        'Fitness_motives', 'PSQI', 'CDRS', 'Global Self-Esteem',
        'Perceived physical value', 'Physical condition', 'Sport competence',
@@ -88,8 +88,8 @@ install.packages("NbClust")
 install.packages("readxl")
 require("NbClust")
 library(readxl)
-data <- read_excel("STUDEAT/created_df/R_data_to_run_bestClusterNb.xlsx")
-data = subset(data, select = c(2:38))
+data <- read_excel("/home/jlefortb/Marc_Study/STUDEAT/created_df/R_data_to_run_bestClusterNb.xlsx")
+data = subset(data, select = c(2:39))
 
 # RUN ONLY METRICS THAT WORK (DISSIMILARITY MATRIX IS NOT INVERTIBLE..)
 set.seed(42)
@@ -130,7 +130,8 @@ R output
 * 5 proposed 3 as the best number of clusters 
 * 1 proposed 4 as the best number of clusters 
 * 0 proposed 5 as the best number of clusters 
-* 1 proposed 6 as the best number of clusters 
+* 2 proposed 6 as the best number of clusters 
+* 0 proposed 7 as the best number of clusters 
 * 0 proposed 8 as the best number of clusters 
 
                    ***** Conclusion *****                            

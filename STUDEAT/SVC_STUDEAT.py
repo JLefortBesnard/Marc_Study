@@ -43,8 +43,9 @@ def rotateTickLabels(ax, rotation, which, rotation_mode='anchor', ha='left'):
 
 df_data_standardized = pd.read_excel("created_df/df_high_risk_std.xlsx")
 
+
 variable_names_included_in_clustering = [
-       'BMI', 'Age', 'Psychological_motives',
+       'Sex', 'BMI', 'Age', 'Psychological_motives',
        'Interpersonal_motives', 'Health_motives', 'Body_related_motives',
        'Fitness_motives', 'PSQI', 'CDRS', 'Global Self-Esteem',
        'Perceived physical value', 'Physical condition', 'Sport competence',
@@ -62,8 +63,9 @@ variable_names_included_in_clustering = [
        'F-MPS Excessively high personal standards',
        'F-MPS Concern with precision, order and organisation', 'sport_time']
 
+
 X_std = df_data_standardized[variable_names_included_in_clustering].values
-assert X_std.shape==(289, 38)
+assert X_std.shape==(1079, 39)
 y = df_data_standardized['EAT_26_total_score'].values
 
 
@@ -72,8 +74,8 @@ y = df_data_standardized['EAT_26_total_score'].values
 y = np.where(y >= 20, y, 0)
 y = np.where(y < 20, y, 1)
 
-print("N y==0 : ",y[np.where(y==0)].__len__()) # 206
-print("N y==1 : ",y[np.where(y==1)].__len__()) # 83
+print("N y==0 : ",y[np.where(y==0)].__len__()) # 907
+print("N y==1 : ",y[np.where(y==1)].__len__()) # 172
 
 
 #Downsampling - y == 0 and y == 1 samples size are imbalanced, a downsampling is needed 
@@ -81,10 +83,10 @@ selected_index_y0 = np.random.choice(np.where(y == 0)[0], y[np.where(y==1)].__le
 included_subject_index = np.sort(np.concatenate((selected_index_y0, np.where(y == 1)[0])))
 print(included_subject_index)
 y = y[included_subject_index]
-assert y.shape == (166,)
+assert y.shape == (344,)
 
 X_std = X_std[included_subject_index]
-assert X_std.shape == (166, 38)
+assert X_std.shape == (344, 39)
 
 
 #######################################
