@@ -11,9 +11,11 @@ This code:
     Save the best model parameters 
 """
 
+
 from matplotlib import pyplot as plt
 from sklearn.svm import SVC
 from sklearn.model_selection import GridSearchCV, cross_val_score, KFold
+from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.linear_model import RidgeClassifier
 from sklearn.ensemble import RandomForestClassifier 
@@ -22,6 +24,7 @@ from sklearn.tree import DecisionTreeClassifier
 
 import numpy as np
 import pandas as pd
+
 
 #Reproducibility
 np.random.seed(0)
@@ -32,26 +35,29 @@ np.random.seed(0)
 
 df_data_standardized = pd.read_excel("created_df/df_high_risk_std.xlsx")
 
+
 variable_names_included_in_clustering = [
-       'Sex','Age','BMI', 'Psychological_motives',
+       'BMI', 'Age', 'Psychological_motives',
        'Interpersonal_motives', 'Health_motives', 'Body_related_motives',
-       'Fitness_motives', 'BES_subscale_appearance',
-       'BES_subscale_attribution', 'BES_subscale_weight', 'CDRS', 'Rosenberg',
-       'HADS_anxiety', 'HADS_depression', 'EDSR_subscale_withdrawal',
+       'Fitness_motives', 'PSQI', 'CDRS', 'Global Self-Esteem',
+       'Perceived physical value', 'Physical condition', 'Sport competence',
+       'Physical Appearence', 'Physical Strength', 'HADS_anxiety',
+       'HADS_depression', 'EDSR', 'EDSR_subscale_withdrawal',
        'EDSR_subscale_continuance', 'EDSR_subscale_tolerance',
        'EDSR_subscale_lack_control', 'EDSR_subscale_reduction_activities',
-       'EDSR_subscale_time', 'EDSR_subscale_intention',
+       'EDSR_subscale_time', 'EDSR_subscale_intention', 
        'MAIA_Noticing_subscale', 'MAIA_Not-distracting_subscale',
        'MAIA_Not-Worrying_subscale', 'MAIA_Attention_regulation_subscale',
        'MAIA_Emotional_awareness_subscale', 'MAIA_Self-regulation_subscale',
-       'MAIA_Body_listening_subscale', 'MAIA_Trusting_subscale',
-       'F-MPS Concern over mistakes and doubts about actions', 'F-MPS Excessive concern with parents expectations and evaluation',
+       'MAIA_Body_listening_subscale', 'MAIA_Trusting_subscale', 
+       'F-MPS Concern over mistakes and doubts about actions',
+       'F-MPS Excessive concern with parents expectations and evaluation',
        'F-MPS Excessively high personal standards',
        'F-MPS Concern with precision, order and organisation', 'sport_time']
 
 
 X_std = df_data_standardized[variable_names_included_in_clustering].values
-assert X_std.shape==(392, 35)
+assert X_std.shape==(289, 38)
 y = df_data_standardized['EAT_26_total_score'].values
 
 
@@ -60,18 +66,20 @@ y = df_data_standardized['EAT_26_total_score'].values
 y = np.where(y >= 20, y, 0)
 y = np.where(y < 20, y, 1)
 
-print("N y==0 : ",y[np.where(y==0)].__len__()) # 379
-print("N y==1 : ",y[np.where(y==1)].__len__()) # 146
+print("N y==0 : ",y[np.where(y==0)].__len__()) # 206
+print("N y==1 : ",y[np.where(y==1)].__len__()) # 83
+
 
 #Downsampling - y == 0 and y == 1 samples size are imbalanced, a downsampling is needed 
 selected_index_y0 = np.random.choice(np.where(y == 0)[0], y[np.where(y==1)].__len__(), replace = False)
 included_subject_index = np.sort(np.concatenate((selected_index_y0, np.where(y == 1)[0])))
 print(included_subject_index)
 y = y[included_subject_index]
-assert y.shape == (234,)
+assert y.shape == (166,)
 
 X_std = X_std[included_subject_index]
-assert X_std.shape == (234,35)
+assert X_std.shape == (166, 38)
+
 
 
 #######################################
@@ -120,9 +128,9 @@ for ind, est in enumerate(estimators_classif):
     score_VP[est[0]]=cross_val_score(clf.best_estimator_, X=X_std, y=y, cv=outer_cv)
     
     if np.mean(score_VP[est[0]]) > best_score:
-        if ind <=2 : # only linear model are included
-            best_score = np.mean(score_VP[est[0]])
-            selected_model = clf.best_estimator_
+        # if ind <=2 : # only linear model are included
+        best_score = np.mean(score_VP[est[0]])
+        selected_model = clf.best_estimator_
 df_dataVP = pd.DataFrame.from_dict(score_VP)
 
 #######################################
@@ -157,3 +165,5 @@ print(df_dataVP)
 print("Selected model: ",selected_model)
 print("Average score outer CV: ",nested_scores)
 
+# Selected model:  LogisticRegression(C=0.1, random_state=0)
+# Average score outer CV:  0.8192508710801394

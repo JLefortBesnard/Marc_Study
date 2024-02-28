@@ -18,10 +18,8 @@ import os
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-
-# get data
-df_data = pd.read_excel("ED_prediction_scored_data_APPETIT.xlsx")
-assert df_data.shape == (1053, 58) #1053 subjects, 58 variables
+df_data = pd.read_excel("ED_prediction_scored_data.xlsx")
+#assert df_data.shape == (1926, 46) #1926 subjects, 46 variables
 
 # Create folders to store temporary df
 if not os.path.exists("created_df"):
@@ -31,24 +29,28 @@ if not os.path.exists("created_df"):
 # Standardize data 
 ####################
 variable_names_included_to_standardized = [
-       'Age','BMI','Psychological_motives',
+       'BMI', 'Psychological_motives',
        'Interpersonal_motives', 'Health_motives', 'Body_related_motives',
-       'Fitness_motives', 'BES_subscale_appearance',
-       'BES_subscale_attribution', 'BES_subscale_weight', 'CDRS', 'Rosenberg',
-       'HADS_anxiety', 'HADS_depression', 'EDSR_subscale_withdrawal',
+       'Fitness_motives', 'PSQI', 'CDRS', 'Global Self-Esteem',
+       'Perceived physical value', 'Physical condition', 'Sport competence',
+       'Physical Appearence', 'Physical Strength', 'HADS_anxiety',
+       'HADS_depression', 'EDSR', 'EDSR_subscale_withdrawal',
        'EDSR_subscale_continuance', 'EDSR_subscale_tolerance',
        'EDSR_subscale_lack_control', 'EDSR_subscale_reduction_activities',
-       'EDSR_subscale_time', 'EDSR_subscale_intention',
+       'EDSR_subscale_time', 'EDSR_subscale_intention', 
        'MAIA_Noticing_subscale', 'MAIA_Not-distracting_subscale',
        'MAIA_Not-Worrying_subscale', 'MAIA_Attention_regulation_subscale',
        'MAIA_Emotional_awareness_subscale', 'MAIA_Self-regulation_subscale',
-       'MAIA_Body_listening_subscale', 'MAIA_Trusting_subscale',
-       'F-MPS Concern over mistakes and doubts about actions', 'F-MPS Excessive concern with parents expectations and evaluation',
+       'MAIA_Body_listening_subscale', 'MAIA_Trusting_subscale', 
+       'F-MPS Concern over mistakes and doubts about actions',
+       'F-MPS Excessive concern with parents expectations and evaluation',
        'F-MPS Excessively high personal standards',
        'F-MPS Concern with precision, order and organisation', 'sport_time']
+
+
 data_to_std = df_data[variable_names_included_to_standardized].values
 std_data = StandardScaler().fit_transform(data_to_std)
-assert std_data.shape == (1053, 34) #1053 subjects, 35 variables
+assert std_data.shape == (1926, 37) 
 
 # save the standardized data into a copy of the original df
 df_data_standardized = df_data.copy()
@@ -59,25 +61,26 @@ df_data_standardized[variable_names_included_to_standardized] = std_data
 # Clustering analysis 
 ####################
 variable_names_included_in_clustering = [
-       'Sex','Age','BMI','Psychological_motives',
+       'BMI', 'Age', 'Psychological_motives',
        'Interpersonal_motives', 'Health_motives', 'Body_related_motives',
-       'Fitness_motives', 'BES_subscale_appearance',
-       'BES_subscale_attribution', 'BES_subscale_weight', 'CDRS', 'Rosenberg',
-       'HADS_anxiety', 'HADS_depression', 'EDSR_subscale_withdrawal',
+       'Fitness_motives', 'PSQI', 'CDRS', 'Global Self-Esteem',
+       'Perceived physical value', 'Physical condition', 'Sport competence',
+       'Physical Appearence', 'Physical Strength', 'HADS_anxiety',
+       'HADS_depression', 'EDSR', 'EDSR_subscale_withdrawal',
        'EDSR_subscale_continuance', 'EDSR_subscale_tolerance',
        'EDSR_subscale_lack_control', 'EDSR_subscale_reduction_activities',
-       'EDSR_subscale_time', 'EDSR_subscale_intention',
+       'EDSR_subscale_time', 'EDSR_subscale_intention', 
        'MAIA_Noticing_subscale', 'MAIA_Not-distracting_subscale',
        'MAIA_Not-Worrying_subscale', 'MAIA_Attention_regulation_subscale',
        'MAIA_Emotional_awareness_subscale', 'MAIA_Self-regulation_subscale',
-       'MAIA_Body_listening_subscale', 'MAIA_Trusting_subscale',
-       'F-MPS Concern over mistakes and doubts about actions', 'F-MPS Excessive concern with parents expectations and evaluation',
+       'MAIA_Body_listening_subscale', 'MAIA_Trusting_subscale', 
+       'F-MPS Concern over mistakes and doubts about actions',
+       'F-MPS Excessive concern with parents expectations and evaluation',
        'F-MPS Excessively high personal standards',
        'F-MPS Concern with precision, order and organisation', 'sport_time']
 
 # extract data to run the R package "nbclust" to check for best nb of cluster
 df_data_standardized[variable_names_included_in_clustering].to_excel("created_df/R_data_to_run_bestClusterNb.xlsx")
-
 
 # R code to apply nbclust (R package) to get best cluster nb according to 30 metrics, output is paste at the end
 """
@@ -85,33 +88,65 @@ install.packages("NbClust")
 install.packages("readxl")
 require("NbClust")
 library(readxl)
-data <- read_excel("APPETIT/created_df/df_R_bestClusterNb.xlsx")
-data = subset(data, select = c(2:36))
+data <- read_excel("STUDEAT/created_df/R_data_to_run_bestClusterNb.xlsx")
+data = subset(data, select = c(2:38))
+
+# RUN ONLY METRICS THAT WORK (DISSIMILARITY MATRIX IS NOT INVERTIBLE..)
 set.seed(42)
-NbClust(data, min.nc = 2, max.nc = 8, method = 'kmeans')
+indices <- c("kl", "ch", "hartigan", "cindex", "db", "silhouette", "duda", "pseudot2", "beale", "ratkowsky", "ball", "ptbiserial", "gap", "frey", "mcclain", "dunn", "hubert", "sdindex", "dindex", "sdbw")
+# Perform clustering
+get_best_nc <- function(index, data) {
+  result <- NbClust(data, distance = "euclidean", min.nc = 2, max.nc = 8, method = 'kmeans', index = index)
+  return(result$Best.nc)
+}
+best_nc_results <- sapply(indices, function(index) {
+  print(index)
+  get_best_nc(index, data)
+})
+
+# PRINT RESULTS
+count_clusters <- function(best_nc_results) {
+  # Initialize counters
+  cluster_counts <- c(`2 clusters` = 0, `3 clusters` = 0, `4 clusters` = 0, `5 clusters` = 0, `6 clusters` = 0, `7 clusters` = 0, `8 clusters` = 0)
+
+  # Iterate over best_nc_results and count occurrences
+  for (result in best_nc_results) {
+    cluster_counts[paste(result, "clusters")] <- cluster_counts[paste(result, "clusters")] + 1
+  }
+
+  # Print the counts
+  print(cluster_counts)
+}
+
+# Example usage
+# Assuming best_nc_results is the result obtained previously
+count_clusters(best_nc_results)
+
 
 R output
 ******************************************************************* 
 * Among all indices:                                                
-* 11 proposed 2 as the best number of clusters 
-* 8 proposed 3 as the best number of clusters 
-* 2 proposed 4 as the best number of clusters 
-* 1 proposed 5 as the best number of clusters 
+* 10 proposed 2 as the best number of clusters 
+* 5 proposed 3 as the best number of clusters 
+* 1 proposed 4 as the best number of clusters 
+* 0 proposed 5 as the best number of clusters 
 * 1 proposed 6 as the best number of clusters 
-* 1 proposed 8 as the best number of clusters 
+* 0 proposed 8 as the best number of clusters 
 
                    ***** Conclusion *****                            
  
 * According to the majority rule, the best number of clusters is  2 
 ******************************************************************* 
+
+
 """
+
 
 # nb cluster = 2 according to R output cluster 
 output_clustering = KMeans(n_clusters=2, random_state=0).fit(df_data_standardized[variable_names_included_in_clustering].values)
 
 df_data["cluster"] = output_clustering.labels_
 df_data_standardized["cluster"] = output_clustering.labels_
-
 
 
 ####################
@@ -148,22 +183,26 @@ df_low_risk = df_data[df_data["cluster"] == "Low risk"]
 df_low_risk.to_excel("created_df/df_low_risk.xlsx")
 assert df_high_risk.shape == (len(df_data[df_data["cluster"]=="High risk"]), len(df_data.columns))
 
+
 variable_names_included_in_plotting = [
-       'Age', 'BMI', 'Psychological_motives',
+       'BMI', 'Age', 'Psychological_motives',
        'Interpersonal_motives', 'Health_motives', 'Body_related_motives',
-       'Fitness_motives', 'BES_subscale_appearance',
-       'BES_subscale_attribution', 'BES_subscale_weight', 'CDRS', 'Rosenberg',
-       'HADS_anxiety', 'HADS_depression', 'EDSR_subscale_withdrawal',
+       'Fitness_motives', 'PSQI', 'CDRS', 'Global Self-Esteem',
+       'Perceived physical value', 'Physical condition', 'Sport competence',
+       'Physical Appearence', 'Physical Strength', 'HADS_anxiety',
+       'HADS_depression', 'EDSR', 'EDSR_subscale_withdrawal',
        'EDSR_subscale_continuance', 'EDSR_subscale_tolerance',
        'EDSR_subscale_lack_control', 'EDSR_subscale_reduction_activities',
-       'EDSR_subscale_time', 'EDSR_subscale_intention',
+       'EDSR_subscale_time', 'EDSR_subscale_intention', 
        'MAIA_Noticing_subscale', 'MAIA_Not-distracting_subscale',
        'MAIA_Not-Worrying_subscale', 'MAIA_Attention_regulation_subscale',
        'MAIA_Emotional_awareness_subscale', 'MAIA_Self-regulation_subscale',
-       'MAIA_Body_listening_subscale', 'MAIA_Trusting_subscale',
-       'F-MPS Concern over mistakes and doubts about actions', 'F-MPS Excessive concern with parents expectations and evaluation',
+       'MAIA_Body_listening_subscale', 'MAIA_Trusting_subscale', 
+       'F-MPS Concern over mistakes and doubts about actions',
+       'F-MPS Excessive concern with parents expectations and evaluation',
        'F-MPS Excessively high personal standards',
-       'F-MPS Concern with precision, order and organisation', 'sport_time','cluster']
+       'F-MPS Concern with precision, order and organisation', 'sport_time', 'cluster']
+
 
 ##
 # plot original data
@@ -200,5 +239,3 @@ plt.legend(fontsize = 12, title = "Clusters", title_fontsize = 12)
 plt.tight_layout()
 g.savefig('results/visualisation/barplot_data_standardized.png', dpi=300)
 plt.close('all')
-
-
